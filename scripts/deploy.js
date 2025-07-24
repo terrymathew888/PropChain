@@ -1,67 +1,119 @@
-// We require the Hardhat Runtime Environment explicitly here. This is optional
-// but useful for running the script in a standalone fashion through `node <script>`.
-//
-// You can also run a script with `npx hardhat run <script>`. If you do that, Hardhat
-// will compile your contracts, add the Hardhat Runtime Environment's members to the
-// global scope, and execute the script.
 const hre = require("hardhat");
+const fs = require("fs");
+const path = require("path");
 
 const tokens = (n) => {
-  return ethers.utils.parseUnits(n.toString(), 'ether')
+  return hre.ethers.parseEther(n.toString());
 }
 
 async function main() {
+  console.log("Starting deployment...");
+  
   // Setup accounts
-  const [buyer, seller, inspector, lender] = await ethers.getSigners()
+  const [buyer, seller, inspector, lender] = await hre.ethers.getSigners();
+  
+  console.log("Deploying contracts with the following addresses:");
+  console.log("Seller:", seller.address);
+  console.log("Buyer:", buyer.address);
+  console.log("Inspector:", inspector.address);
+  console.log("Lender:", lender.address);
+  console.log("---");
 
   // Deploy Real Estate
-  const RealEstate = await ethers.getContractFactory('RealEstate')
-  const realEstate = await RealEstate.deploy()
-  await realEstate.deployed()
+  console.log("Deploying RealEstate contract...");
+  const RealEstate = await hre.ethers.getContractFactory("RealEstate");
+  const realEstate = await RealEstate.deploy();
+  await realEstate.waitForDeployment();
+  const realEstateAddress = await realEstate.getAddress();
+  
+  console.log(`RealEstate deployed to: ${realEstateAddress}`);
+  console.log("Minting 3 properties...\n");
 
-  console.log(`Deployed Real Estate Contract at: ${realEstate.address}`)
-  console.log(`Minting 3 properties...\n`)
-
+  // Mint properties
   for (let i = 0; i < 3; i++) {
-    const transaction = await realEstate.connect(seller).mint(`https://ipfs.io/ipfs/QmQVcpsjrA6cr1iJjZAodYwmPekYgbnXGo4DFubJiLc2EB/${i + 1}.json`)
-    await transaction.wait()
+    const tx = await realEstate.connect(seller).mint(
+      `https://ipfs.io/ipfs/QmQVcpsjrA6cr1iJjZAodYwmPekYgbnXGo4DFubJiLc2EB/${i + 1}.json`
+    );
+    await tx.wait();
+    console.log(`Property ${i + 1} minted`);
   }
 
   // Deploy Escrow
-  const Escrow = await ethers.getContractFactory('Escrow')
+  console.log("\nDeploying Escrow contract...");
+  const Escrow = await hre.ethers.getContractFactory("Escrow");
   const escrow = await Escrow.deploy(
-    realEstate.address,
+    realEstateAddress,
     seller.address,
     inspector.address,
     lender.address
-  )
-  await escrow.deployed()
+  );
+  await escrow.waitForDeployment();
+  const escrowAddress = await escrow.getAddress();
+  
+  console.log(`Escrow deployed to: ${escrowAddress}`);
+  console.log("Listing 3 properties...\n");
 
-  console.log(`Deployed Escrow Contract at: ${escrow.address}`)
-  console.log(`Listing 3 properties...\n`)
-
+  // Approve properties for escrow
   for (let i = 0; i < 3; i++) {
-    // Approve properties...
-    let transaction = await realEstate.connect(seller).approve(escrow.address, i + 1)
-    await transaction.wait()
+    let tx = await realEstate.connect(seller).approve(escrowAddress, i + 1);
+    await tx.wait();
   }
 
-  // Listing properties...
-  transaction = await escrow.connect(seller).list(1, buyer.address, tokens(20), tokens(10))
-  await transaction.wait()
+  // List properties
+  let tx = await escrow.connect(seller).list(1, buyer.address, tokens(20), tokens(10));
+  await tx.wait();
+  console.log("Property 1 listed: Price 20 ETH, Escrow 10 ETH");
 
-  transaction = await escrow.connect(seller).list(2, buyer.address, tokens(15), tokens(5))
-  await transaction.wait()
+  tx = await escrow.connect(seller).list(2, buyer.address, tokens(15), tokens(5));
+  await tx.wait();
+  console.log("Property 2 listed: Price 15 ETH, Escrow 5 ETH");
 
-  transaction = await escrow.connect(seller).list(3, buyer.address, tokens(10), tokens(5))
-  await transaction.wait()
+  tx = await escrow.connect(seller).list(3, buyer.address, tokens(10), tokens(5));
+  await tx.wait();
+  console.log("Property 3 listed: Price 10 ETH, Escrow 5 ETH");
 
-  console.log(`Finished.`)
+  // Save deployment addresses
+  const chainId = hre.network.config.chainId;
+  const deployedAddresses = {
+    [chainId]: {
+      realEstate: {
+        address: realEstateAddress
+      },
+      escrow: {
+        address: escrowAddress
+      },
+      deployer: seller.address,
+      buyer: buyer.address,
+      inspector: inspector.address,
+      lender: lender.address,
+      deploymentTime: new Date().toISOString()
+    }
+  };
+
+  const deploymentPath = path.join(__dirname, "../src/config/deployedAddresses.json");
+  
+  // Read existing deployments if file exists
+  let existingDeployments = {};
+  if (fs.existsSync(deploymentPath)) {
+    existingDeployments = JSON.parse(fs.readFileSync(deploymentPath, "utf8"));
+  }
+  
+  // Merge with new deployment
+  const updatedDeployments = { ...existingDeployments, ...deployedAddresses };
+  
+  // Write updated deployments
+  fs.writeFileSync(
+    deploymentPath,
+    JSON.stringify(updatedDeployments, null, 2)
+  );
+
+  console.log("\n✅ Deployment completed successfully!");
+  console.log(`📁 Deployment addresses saved to: ${deploymentPath}`);
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
