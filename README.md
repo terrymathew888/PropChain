@@ -1,8 +1,8 @@
-# Millow - Real Estate NFT DApp
+# PropChain - Real Estate NFT DApp
 
 A modern decentralized real estate marketplace built with React, Solidity, and Ethereum. Buy, sell, and trade properties as NFTs with built-in escrow functionality.
 
-![Millow Banner](./src/assets/banner.png)
+![PropChain Banner](./src/assets/banner.png)
 
 ## 🚀 Features
 
@@ -45,8 +45,8 @@ A modern decentralized real estate marketplace built with React, Solidity, and E
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/millow.git
-   cd millow
+   git clone https://github.com/yourusername/PropChain.git
+   cd PropChain
    ```
 
 2. **Install dependencies**
@@ -166,29 +166,8 @@ npx hardhat run scripts/deploy.js --network mainnet
 npx hardhat verify --network sepolia DEPLOYED_CONTRACT_ADDRESS
 ```
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
 ## 📜 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
-
-- OpenZeppelin for secure smart contract libraries
-- Hardhat for the development environment
-- RainbowKit for wallet integration
-- The Ethereum community
-
-## 📞 Support
-
-For support, please open an issue in the GitHub repository or contact the maintainers.
-
 ---
-
-Built with ❤️ by the Millow Team
