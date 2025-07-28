@@ -8,8 +8,8 @@ const Navigation = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo and Brand */}
           <div className="flex items-center">
-            <img src={logo} alt="Millow Logo" className="h-10 w-10 mr-3" />
-            <h1 className="text-2xl font-bold text-indigo-600">Millow</h1>
+            <img src={logo} alt="PropChain Logo" className="h-10 w-10 mr-3" />
+            <h1 className="text-2xl font-bold text-indigo-600">PropChain</h1>
           </div>
 
           {/* Navigation Links */}

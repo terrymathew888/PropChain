@@ -3,7 +3,7 @@ import { hardhat, mainnet, sepolia } from 'wagmi/chains'
 import { http } from 'wagmi'
 
 export const config = getDefaultConfig({
-  appName: 'Millow',
+  appName: 'PropChain',
   projectId: 'e6228b55176bb6062f06af0ab9d4ad09', // Get from WalletConnect Cloud
   chains: [hardhat, sepolia, mainnet],
   transports: {
